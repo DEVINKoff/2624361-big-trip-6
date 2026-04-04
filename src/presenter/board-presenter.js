@@ -2,6 +2,7 @@ import SortView from '../view/sort-view.js';
 import EventListView from '../view/event-list-view.js';
 import EventView from '../view/event-view.js';
 import EditEventView from '../view/edit-event-view.js';
+import NoEventView from '../view/no-event-view.js';
 import {render, replace} from '../framework/render.js';
 
 export default class BoardPresenter {
@@ -16,6 +17,11 @@ export default class BoardPresenter {
 
   init() {
     const events = this.#eventsModel.events;
+
+    if (events.length === 0) {
+      render(new NoEventView(), this.#boardContainer);
+      return;
+    }
 
     render(new SortView(), this.#boardContainer);
     render(this.#eventListComponent, this.#boardContainer);
