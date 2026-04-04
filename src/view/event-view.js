@@ -1,4 +1,4 @@
-import {createElement} from '../render.js';
+import AbstractView from '../framework/view/abstract-view.js';
 
 function formatTime(dateString) {
   const date = new Date(dateString);
@@ -86,31 +86,28 @@ function createEventTemplate(event, destination, selectedOffers) {
   );
 }
 
-export default class EventView {
-  #element = null;
+export default class EventView extends AbstractView {
   #event = null;
   #destination = null;
   #offers = null;
+  #handleEditClick = null;
 
-  constructor({event, destination, offers}) {
+  constructor({event, destination, offers, onEditClick}) {
+    super();
     this.#event = event;
     this.#destination = destination;
     this.#offers = offers;
+    this.#handleEditClick = onEditClick;
+
+    this.element.querySelector('.event__rollup-btn').addEventListener('click', this.#editClickHandler);
   }
 
   get template() {
     return createEventTemplate(this.#event, this.#destination, this.#offers);
   }
 
-  getElement() {
-    if (!this.#element) {
-      this.#element = createElement(this.template);
-    }
-
-    return this.#element;
-  }
-
-  removeElement() {
-    this.#element = null;
-  }
+  #editClickHandler = (evt) => {
+    evt.preventDefault();
+    this.#handleEditClick();
+  };
 }

@@ -1,7 +1,7 @@
 import FilterView from './view/filter-view.js';
 import BoardPresenter from './presenter/board-presenter.js';
 import EventsModel from './model/events-model.js';
-import {render} from './render.js';
+import {render} from './framework/render.js';
 
 const filtersContainer = document.querySelector('.trip-controls__filters');
 const tripEventsSection = document.querySelector('.trip-events');
