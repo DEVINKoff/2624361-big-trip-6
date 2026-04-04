@@ -1,4 +1,4 @@
-import {createElement} from '../render.js';
+import AbstractView from '../framework/view/abstract-view.js';
 import {TYPES} from '../mock/const.js';
 
 function formatDateForInput(dateString) {
@@ -135,33 +135,38 @@ function createEditEventTemplate(event, destination, allOffers, allDestinations)
   );
 }
 
-export default class EditEventView {
-  #element = null;
+export default class EditEventView extends AbstractView {
   #event = null;
   #destination = null;
   #allOffers = null;
   #allDestinations = null;
+  #handleFormSubmit = null;
+  #handleCloseClick = null;
 
-  constructor({event, destination, allOffers, allDestinations}) {
+  constructor({event, destination, allOffers, allDestinations, onFormSubmit, onCloseClick}) {
+    super();
     this.#event = event;
     this.#destination = destination;
     this.#allOffers = allOffers;
     this.#allDestinations = allDestinations;
+    this.#handleFormSubmit = onFormSubmit;
+    this.#handleCloseClick = onCloseClick;
+
+    this.element.querySelector('form').addEventListener('submit', this.#formSubmitHandler);
+    this.element.querySelector('.event__rollup-btn').addEventListener('click', this.#closeClickHandler);
   }
 
   get template() {
     return createEditEventTemplate(this.#event, this.#destination, this.#allOffers, this.#allDestinations);
   }
 
-  getElement() {
-    if (!this.#element) {
-      this.#element = createElement(this.template);
-    }
+  #formSubmitHandler = (evt) => {
+    evt.preventDefault();
+    this.#handleFormSubmit();
+  };
 
-    return this.#element;
-  }
-
-  removeElement() {
-    this.#element = null;
-  }
+  #closeClickHandler = (evt) => {
+    evt.preventDefault();
+    this.#handleCloseClick();
+  };
 }
