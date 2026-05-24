@@ -28,8 +28,8 @@ export default class EventsModel {
   }
 
   updateEvent(updatedEvent) {
-  this.#events = this.#events.map((event) =>
-    event.id === updatedEvent.id ? updatedEvent : event
+    this.#events = this.#events.map((event) =>
+      event.id === updatedEvent.id ? updatedEvent : event
     );
   }
 }
