@@ -4,6 +4,8 @@ import EditEventView from '../view/edit-event-view.js';
 import EventPresenter from './event-presenter.js';
 import {render} from '../render.js';
 
+// test
+
 export default class BoardPresenter {
   #boardContainer = null;
   #eventsModel = null;
