@@ -1,14 +1,16 @@
 import SortView from '../view/sort-view.js';
 import EventListView from '../view/event-list-view.js';
-import EventView from '../view/event-view.js';
-import EditEventView from '../view/edit-event-view.js';
 import NoEventView from '../view/no-event-view.js';
-import {render, replace} from '../framework/render.js';
+import {render} from '../framework/render.js';
+import EventPresenter from './event-presenter.js';
 
 export default class BoardPresenter {
   #boardContainer = null;
   #eventsModel = null;
+
   #eventListComponent = new EventListView();
+
+  #eventPresenters = new Map();
 
   constructor({boardContainer, eventsModel}) {
     this.#boardContainer = boardContainer;
@@ -18,7 +20,7 @@ export default class BoardPresenter {
   init() {
     const events = this.#eventsModel.events;
 
-    if (events.length === 0) {
+    if (!events.length) {
       render(new NoEventView(), this.#boardContainer);
       return;
     }
@@ -26,58 +28,29 @@ export default class BoardPresenter {
     render(new SortView(), this.#boardContainer);
     render(this.#eventListComponent, this.#boardContainer);
 
-    for (let i = 0; i < events.length; i++) {
-      this.#renderEvent(events[i]);
-    }
+    events.forEach((event) => this.#renderEvent(event));
   }
 
   #renderEvent(event) {
-    const destination = this.#eventsModel.getDestinationById(event.destination);
-    const offersByType = this.#eventsModel.getOffersByType(event.type);
-    const selectedOffers = offersByType.filter((offer) => event.offers.includes(offer.id));
-    const allDestinations = this.#eventsModel.destinations;
-
-    const eventComponent = new EventView({
-      event,
-      destination,
-      offers: selectedOffers,
-      onEditClick: () => {
-        replaceEventToForm();
-        document.addEventListener('keydown', escKeyDownHandler);
-      },
+    const eventPresenter = new EventPresenter({
+      container: this.#eventListComponent.element,
+      eventsModel: this.#eventsModel,
+      onDataChange: this.#handleEventChange,
+      onModeChange: this.#handleModeChange
     });
 
-    const editEventComponent = new EditEventView({
-      event,
-      destination,
-      allOffers: offersByType,
-      allDestinations,
-      onFormSubmit: () => {
-        replaceFormToEvent();
-        document.removeEventListener('keydown', escKeyDownHandler);
-      },
-      onCloseClick: () => {
-        replaceFormToEvent();
-        document.removeEventListener('keydown', escKeyDownHandler);
-      },
-    });
+    eventPresenter.init(event);
 
-    function replaceEventToForm() {
-      replace(editEventComponent, eventComponent);
-    }
-
-    function replaceFormToEvent() {
-      replace(eventComponent, editEventComponent);
-    }
-
-    function escKeyDownHandler(evt) {
-      if (evt.key === 'Escape') {
-        evt.preventDefault();
-        replaceFormToEvent();
-        document.removeEventListener('keydown', escKeyDownHandler);
-      }
-    }
-
-    render(eventComponent, this.#eventListComponent.element);
+    this.#eventPresenters.set(event.id, eventPresenter);
   }
+
+  #handleEventChange = (updatedEvent) => {
+    this.#eventsModel.updateEvent(updatedEvent);
+
+    this.#eventPresenters.get(updatedEvent.id).init(updatedEvent);
+  };
+
+  #handleModeChange = () => {
+    this.#eventPresenters.forEach((presenter) => presenter.resetView());
+  };
 }

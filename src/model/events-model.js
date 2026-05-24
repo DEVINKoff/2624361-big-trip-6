@@ -26,4 +26,10 @@ export default class EventsModel {
   getOffersByType(type) {
     return this.#offers.find((offer) => offer.type === type)?.offers || [];
   }
+
+  updateEvent(updatedEvent) {
+  this.#events = this.#events.map((event) =>
+    event.id === updatedEvent.id ? updatedEvent : event
+    );
+  }
 }
