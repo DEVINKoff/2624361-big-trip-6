@@ -1,9 +1,7 @@
 import PointPresenter from './point-presenter.js';
-import ListPointView from '../view/list-point-view.js';
 import PointListView from '../view/point-list-view.js';
 import SortView from '../view/sort-view.js';
-
-import {render, remove} from '../framework/render.js';
+import {render} from '../framework/render.js';
 import {SortType} from '../const.js';
 
 const sortByDay = (pointA, pointB) =>
