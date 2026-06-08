@@ -1,70 +1,66 @@
 import AbstractView from '../framework/view/abstract-view.js';
-import dayjs from 'dayjs';
-import duration from 'dayjs/plugin/duration.js';
+import {humanizePointDate, humanizePointTime, getPointDuration} from '../utils/date.js';
 
-dayjs.extend(duration);
-
-const createOfferTemplate = (offer) => `
-  <li class="event__offer">
-    <span class="event__offer-title">${offer.title}</span>
-    &plus;&euro;&nbsp;
-    <span class="event__offer-price">${offer.price}</span>
-  </li>
-`;
-
-const createEventTemplate = (point, destination, pointOffers) => {
-  const {type, basePrice, dateFrom, dateTo, isFavorite} = point;
-
-  const date = dayjs(dateFrom);
-  const month = date.format('MMM').toUpperCase();
-  const day = date.format('DD');
-
-  const startTime = dayjs(dateFrom).format('HH:mm');
-  const endTime = dayjs(dateTo).format('HH:mm');
-
-  const durationMs = dayjs(dateTo).diff(dayjs(dateFrom));
-  const durationHours = Math.floor(durationMs / (1000 * 60 * 60));
-  const durationMinutes = Math.floor((durationMs % (1000 * 60 * 60)) / (1000 * 60));
-
-  let durationText = '';
-  if (durationHours === 0) {
-    durationText = `${durationMinutes}M`;
-  } else if (durationMinutes === 0) {
-    durationText = `${durationHours}H`;
-  } else {
-    durationText = `${durationHours}H ${durationMinutes}M`;
+function createEventOffersTemplate(pointOffers, allOffers, type) {
+  if (!pointOffers || pointOffers.length === 0 || !allOffers || allOffers.length === 0) {
+    return '';
   }
 
-  const offersTemplate = pointOffers
-    .map((offer) => createOfferTemplate(offer))
-    .join('');
+  const typeOffersObj = allOffers.find((off) => off.type === type);
+  if (!typeOffersObj || !typeOffersObj.offers) {
+    return '';
+  }
 
-  const favoriteClass = isFavorite ? 'event__favorite-btn--active' : '';
+  const pointOfferIds = pointOffers.map((offer) => String(offer?.id ?? offer));
+
+  const selectedOffers = typeOffersObj.offers.filter((offer) =>
+    pointOfferIds.includes(String(offer.id))
+  );
+
+  if (selectedOffers.length === 0) {
+    return '';
+  }
 
   return `
-    <li class="trip-events__item">
+    <h4 class="visually-hidden">Offers:</h4>
+    <ul class="event__selected-offers">
+      ${selectedOffers.map((offer) => `
+        <li class="event__offer">
+          <span class="event__offer-title">${offer.title}</span>
+          &plus;&euro;&nbsp;
+          <span class="event__offer-price">${offer.price}</span>
+        </li>
+      `).join('')}
+    </ul>
+  `;
+}
+
+function createEventTemplate(point, destination, allOffers) {
+  const {type, basePrice, isFavorite, dateFrom, dateTo, offers} = point;
+  const {name} = destination;
+  const favoriteClassName = isFavorite ? 'event__favorite-btn--active' : '';
+
+  return (
+    `<li class="trip-events__item">
       <div class="event">
-        <time class="event__date" datetime="${dayjs(dateFrom).format('YYYY-MM-DD')}">${month} ${day}</time>
+        <time class="event__date" datetime="${dateFrom}">${humanizePointDate(dateFrom)}</time>
         <div class="event__type">
           <img class="event__type-icon" width="42" height="42" src="img/icons/${type}.png" alt="Event type icon">
         </div>
-        <h3 class="event__title">${type} ${destination.name}</h3>
+        <h3 class="event__title">${type} ${name}</h3>
         <div class="event__schedule">
           <p class="event__time">
-            <time class="event__start-time" datetime="${dayjs(dateFrom).format('YYYY-MM-DDTHH:mm')}">${startTime}</time>
+            <time class="event__start-time" datetime="${dateFrom}">${humanizePointTime(dateFrom)}</time>
             &mdash;
-            <time class="event__end-time" datetime="${dayjs(dateTo).format('YYYY-MM-DDTHH:mm')}">${endTime}</time>
+            <time class="event__end-time" datetime="${dateTo}">${humanizePointTime(dateTo)}</time>
           </p>
-          <p class="event__duration">${durationText}</p>
+          <p class="event__duration">${getPointDuration(dateFrom, dateTo)}</p>
         </div>
         <p class="event__price">
           &euro;&nbsp;<span class="event__price-value">${basePrice}</span>
         </p>
-        <h4 class="visually-hidden">Offers:</h4>
-        <ul class="event__selected-offers">
-          ${offersTemplate}
-        </ul>
-        <button class="event__favorite-btn ${favoriteClass}" type="button">
+        ${createEventOffersTemplate(offers, allOffers, type)}
+        <button class="event__favorite-btn ${favoriteClassName}" type="button">
           <span class="visually-hidden">Add to favorite</span>
           <svg class="event__favorite-icon" width="28" height="28" viewBox="0 0 28 28">
             <path d="M14 21l-8.22899 4.3262 1.57159-9.1631L.685209 9.67376 9.8855 8.33688 14 0l4.1145 8.33688 9.2003 1.33688-6.6574 6.48934 1.5716 9.1631L14 21z"/>
@@ -74,28 +70,40 @@ const createEventTemplate = (point, destination, pointOffers) => {
           <span class="visually-hidden">Open event</span>
         </button>
       </div>
-    </li>
-  `;
-};
+    </li>`
+  );
+}
 
 export default class EventView extends AbstractView {
-  constructor(point, destination, offers, onEditClick, onFavoriteClick) {
+  #point = null;
+  #destination = null;
+  #offers = null;
+  #handleEditClick = null;
+  #handleFavoriteClick = null;
+
+  constructor({point, destination, offers, onEditClick, onFavoriteClick}) {
     super();
-    this.point = point;
-    this.destination = destination;
-    this.offers = offers;
-    this._onEditClick = onEditClick;
-    this._onFavoriteClick = onFavoriteClick;
+    this.#point = point;
+    this.#destination = destination;
+    this.#offers = offers || [];
+    this.#handleEditClick = onEditClick;
+    this.#handleFavoriteClick = onFavoriteClick;
+
+    this.element.querySelector('.event__rollup-btn').addEventListener('click', this.#editClickHandler);
+    this.element.querySelector('.event__favorite-btn').addEventListener('click', this.#favoriteClickHandler);
   }
 
   get template() {
-    return createEventTemplate(this.point, this.destination, this.offers);
+    return createEventTemplate(this.#point, this.#destination, this.#offers);
   }
 
-  setEventListeners() {
-    this.element.querySelector('.event__rollup-btn')
-      .addEventListener('click', this._onEditClick);
-    this.element.querySelector('.event__favorite-btn')
-      .addEventListener('click', this._onFavoriteClick);
-  }
+  #editClickHandler = (evt) => {
+    evt.preventDefault();
+    this.#handleEditClick();
+  };
+
+  #favoriteClickHandler = (evt) => {
+    evt.preventDefault();
+    this.#handleFavoriteClick();
+  };
 }
