@@ -1,32 +1,30 @@
-export const FilterType = {
-  EVERYTHING: 'everything',
-  FUTURE: 'future',
-  PRESENT: 'present',
-  PAST: 'past'
-};
-
-export const SortType = {
-  DAY: 'day',
-  TIME: 'time',
-  PRICE: 'price'
-};
-
-export const NoPointsMessage = {
-  [FilterType.EVERYTHING]: 'Click New Event to create your first point',
-  [FilterType.FUTURE]: 'There are no future events now',
-  [FilterType.PRESENT]: 'There are no present events now',
-  [FilterType.PAST]: 'There are no past events now'
-};
-
-export const UserAction = {
+const UserAction = {
   UPDATE_POINT: 'UPDATE_POINT',
+  ADD_POINT: 'ADD_POINT',
   DELETE_POINT: 'DELETE_POINT',
-  ADD_POINT: 'ADD_POINT'
 };
 
-export const UpdateType = {
+const UpdateType = {
   PATCH: 'PATCH',
   MINOR: 'MINOR',
   MAJOR: 'MAJOR',
-  INIT: 'INIT'
 };
+
+const FilterType = {
+  EVERYTHING: 'everything',
+  FUTURE: 'future',
+  PRESENT: 'present',
+  PAST: 'past',
+};
+
+const BLANK_POINT = {
+  basePrice: 0,
+  dateFrom: new Date(),
+  dateTo: new Date(),
+  destination: '',
+  isFavorite: false,
+  offers: [],
+  type: 'flight'
+};
+
+export {UserAction, UpdateType, FilterType, BLANK_POINT};
