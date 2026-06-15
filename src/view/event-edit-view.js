@@ -57,7 +57,7 @@ function createDestinationTemplate(targetDestination) {
   }
 
   const textNode = targetDestination.description ? `<p class="event__destination-description">${he.encode(targetDestination.description)}</p>` : '';
-  
+
   let galleryNode = '';
   if (targetDestination.pictures && targetDestination.pictures.length > 0) {
     const images = targetDestination.pictures.map((img) => `<img class="event__photo" src="${he.encode(img.src)}" alt="${he.encode(img.description)}">`).join('');
