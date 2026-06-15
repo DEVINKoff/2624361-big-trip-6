@@ -1,24 +1,59 @@
-import {render} from '../framework/render.js';
-import FiltersView from '../view/filters-view.js';
+import {render, replace, remove} from '../framework/render.js';
+import FilterView from '../view/filter-view.js';
+import {filter} from '../utils/filter.js';
+import {FilterType, UpdateType} from '../const.js';
 
 export default class FilterPresenter {
-  constructor(filterContainer, filterModel) {
-    this.filterContainer = filterContainer;
-    this.filterModel = filterModel;
-    this.filterComponent = null;
+  #container = null;
+  #filtersData = null;
+  #pointsData = null;
+  #viewComponent = null;
+
+  constructor({filterContainer, filterModel, pointsModel}) {
+    this.#container = filterContainer;
+    this.#filtersData = filterModel;
+    this.#pointsData = pointsModel;
+
+    this.#pointsData.addObserver(this.#onModelUpdate);
+    this.#filtersData.addObserver(this.#onModelUpdate);
+  }
+
+  get filters() {
+    const list = this.#pointsData.points;
+
+    return Object.values(FilterType).map((key) => ({
+      type: key,
+      name: key,
+      count: filter[key](list).length,
+    }));
   }
 
   init() {
-    const currentFilter = this.filterModel.getFilter();
-    this.filterComponent = new FiltersView(currentFilter, this._handleFilterChange.bind(this));
-    render(this.filterComponent, this.filterContainer);
-    this.filterComponent.setEventListeners();
-  }
+    const list = this.filters;
+    const oldComponent = this.#viewComponent;
 
-  _handleFilterChange(filterType) {
-    if (filterType === this.filterModel.getFilter()) {
+    this.#viewComponent = new FilterView({
+      filters: list,
+      currentFilterType: this.#filtersData.filter,
+      onFilterTypeChange: this.#onFilterChange
+    });
+
+    if (oldComponent === null) {
+      render(this.#viewComponent, this.#container);
       return;
     }
-    this.filterModel.setFilter('FILTER_CHANGE', filterType);
+
+    replace(this.#viewComponent, oldComponent);
+    remove(oldComponent);
   }
+
+  #onModelUpdate = () => {
+    this.init();
+  };
+
+  #onFilterChange = (filterType) => {
+    if (this.#filtersData.filter !== filterType) {
+      this.#filtersData.setFilter(UpdateType.MAJOR, filterType);
+    }
+  };
 }

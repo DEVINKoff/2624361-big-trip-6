@@ -1,29 +1,15 @@
+import Observable from '../framework/observable.js';
 import {FilterType} from '../const.js';
 
-export default class FilterModel {
-  constructor() {
-    this._currentFilter = FilterType.EVERYTHING;
-    this._observers = [];
-  }
+export default class FilterModel extends Observable {
+  #filter = FilterType.EVERYTHING;
 
-  getFilter() {
-    return this._currentFilter;
+  get filter() {
+    return this.#filter;
   }
 
   setFilter(updateType, filter) {
-    this._currentFilter = filter;
+    this.#filter = filter;
     this._notify(updateType, filter);
-  }
-
-  addObserver(observer) {
-    this._observers.push(observer);
-  }
-
-  removeObserver(observer) {
-    this._observers = this._observers.filter((obs) => obs !== observer);
-  }
-
-  _notify(updateType, data) {
-    this._observers.forEach((observer) => observer(updateType, data));
   }
 }
