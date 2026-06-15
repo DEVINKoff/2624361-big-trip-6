@@ -7,7 +7,7 @@ import {getOffersByType} from '../model/points-model.js';
 
 const DESTINATION_TYPES = ['taxi', 'bus', 'train', 'ship', 'drive', 'flight', 'check-in', 'sightseeing', 'restaurant'];
 
-const createTypeSelectorsTemplate = (activeType, id, isDisabled) => 
+const createTypeSelectorsTemplate = (activeType, id, isDisabled) =>
   DESTINATION_TYPES.map((type) => {
     const isCurrent = type === activeType ? 'checked' : '';
     const status = isDisabled ? 'disabled' : '';
@@ -235,7 +235,7 @@ export default class EventEditView extends AbstractStatefulView {
       dateFormat: 'd/m/y H:i',
       enableTime: true,
       defaultDate: this._state.dateFrom || '',
-      time_24hr: true,
+      time24hr: true,
       onChange: (dates) => {
         const selected = dates[0] ? dates[0].toISOString() : '';
         this._setState({dateFrom: selected});
@@ -249,7 +249,7 @@ export default class EventEditView extends AbstractStatefulView {
       enableTime: true,
       defaultDate: this._state.dateTo || '',
       minDate: this._state.dateFrom || '',
-      time_24hr: true,
+      time24hr: true,
       onChange: (dates) => {
         const selected = dates[0] ? dates[0].toISOString() : '';
         this._setState({dateTo: selected});
@@ -270,7 +270,7 @@ export default class EventEditView extends AbstractStatefulView {
   #destinationToggleHandler = (evt) => {
     evt.preventDefault();
     const match = this.#destinations.find((item) => item.name === evt.target.value);
-    
+
     this.updateElement({
       destination: match ? match.id : '',
     });
